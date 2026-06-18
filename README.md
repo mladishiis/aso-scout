@@ -76,6 +76,18 @@ Cache network results:
 node bin/aso-scout.js --names examples/names.txt --cache .aso-cache.json --cache-ttl 24h
 ```
 
+Speed up larger lists with parallel checks:
+
+```bash
+node bin/aso-scout.js --names examples/names.txt --concurrency 10
+```
+
+Lower concurrency if a source starts timing out or rate limiting:
+
+```bash
+node bin/aso-scout.js --names examples/names.txt --concurrency 2
+```
+
 Skip slow checks:
 
 ```bash
@@ -108,4 +120,5 @@ Portio     0      high    exact 2, close 3, category 2  titles 3     .com regist
 - App Store data comes from `https://itunes.apple.com/search`.
 - Google Play does not provide a public ASO search API; this tool uses a lightweight web search page check.
 - Domain checks use DNS plus RDAP. A domain result can still need manual registrar verification.
+- The default concurrency is conservative. Increase it for quick brainstorming, lower it for RDAP-heavy domain checks.
 - Always verify final names manually in stores, domains, social handles, and trademark databases.

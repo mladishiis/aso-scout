@@ -1,6 +1,6 @@
 {
   "name": "aso-scout",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "CLI for early ASO name research across App Store, Google Play, and domains.",
   "type": "module",
   "bin": {

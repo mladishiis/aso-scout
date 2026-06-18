@@ -3,12 +3,13 @@
 import dns from "node:dns/promises";
 import fs from "node:fs/promises";
 
-const VERSION = "0.2.0";
+const VERSION = "0.2.1";
 const DEFAULT_COUNTRY = "us";
 const DEFAULT_DOMAINS = ["com", "app", "io"];
 const DEFAULT_LIMIT = 20;
 const REQUEST_TIMEOUT_MS = 10000;
 const DEFAULT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_CONCURRENCY = 6;
 
 const PROFILES = {
   calories: {
@@ -49,6 +50,7 @@ Options:
   --markdown <file>       Write Markdown report
   --cache <file>          Cache HTTP/DNS/RDAP results
   --cache-ttl <value>     Cache TTL, for example 12h, 2d, 30m. Default: 24h
+  --concurrency <number>  Names to inspect in parallel. Default: ${DEFAULT_CONCURRENCY}
   --no-app-store          Skip App Store checks
   --no-google-play        Skip Google Play checks
   --no-domains            Skip domain DNS/RDAP checks
@@ -80,6 +82,7 @@ function parseArgs(argv) {
     rdap: true,
     json: false,
     count: 50,
+    concurrency: DEFAULT_CONCURRENCY,
     style: "short",
     names: []
   };
@@ -105,6 +108,7 @@ function parseArgs(argv) {
     else if (arg === "--profile") args.profile = next().toLowerCase();
     else if (arg === "--limit") args.limit = Number(next());
     else if (arg === "--count") args.count = Number(next());
+    else if (arg === "--concurrency") args.concurrency = Number(next());
     else if (arg === "--style") args.style = next().toLowerCase();
     else if (arg === "--json") args.json = true;
     else if (arg === "--csv") args.csv = next();
@@ -122,6 +126,7 @@ function parseArgs(argv) {
   if (!PROFILES[args.profile]) throw new Error(`Unknown profile "${args.profile}". Use: ${Object.keys(PROFILES).join(", ")}`);
   if (!Number.isInteger(args.limit) || args.limit < 1 || args.limit > 200) throw new Error("--limit must be an integer from 1 to 200");
   if (!Number.isInteger(args.count) || args.count < 1 || args.count > 5000) throw new Error("--count must be an integer from 1 to 5000");
+  if (!Number.isInteger(args.concurrency) || args.concurrency < 1 || args.concurrency > 30) throw new Error("--concurrency must be an integer from 1 to 30");
   if (!["short", "brand", "descriptive"].includes(args.style)) throw new Error("--style must be short, brand, or descriptive");
 
   args.cacheTtlMs ??= DEFAULT_CACHE_TTL_MS;
@@ -557,6 +562,23 @@ async function inspectName(name, args, cache) {
   return { name, ...scoreName(name, checks, args.profile), checks };
 }
 
+async function mapConcurrent(items, concurrency, mapper) {
+  const results = Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+
+  const workerCount = Math.min(concurrency, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => worker()));
+  return results;
+}
+
 function printTable(results) {
   const rows = results.map((result) => ({
     name: result.name,
@@ -668,10 +690,7 @@ async function main() {
     return;
   }
 
-  const results = [];
-  for (const name of names) {
-    results.push(await inspectName(name, args, cache));
-  }
+  const results = await mapConcurrent(names, args.concurrency, (name) => inspectName(name, args, cache));
 
   results.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
