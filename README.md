@@ -6,8 +6,12 @@ It helps you quickly screen candidate app names against:
 
 - Apple App Store via the public iTunes Search API
 - Google Play search result pages
-- common domains with DNS checks
-- simple ASO keyword signals
+- common domains with DNS and RDAP checks
+- fuzzy name similarity
+- app category conflicts
+- ASO keyword profiles
+- CSV, Markdown, and JSON reports
+- local caching for repeated research
 
 It is not a trademark search and it cannot prove that a name is legally available. Use it as a fast first pass before deeper ASO and legal checks.
 
@@ -47,6 +51,31 @@ Change country or domain suffixes:
 node bin/aso-scout.js --country us --domains com,app,io,co Bitescale
 ```
 
+Use a keyword profile:
+
+```bash
+node bin/aso-scout.js --profile calories Bitescale Mealva
+node bin/aso-scout.js --profile language LexiPop Wordzy
+```
+
+Generate candidate names:
+
+```bash
+node bin/aso-scout.js generate --profile calories --count 100
+```
+
+Write reports:
+
+```bash
+node bin/aso-scout.js --names examples/names.txt --csv report.csv --markdown report.md
+```
+
+Cache network results:
+
+```bash
+node bin/aso-scout.js --names examples/names.txt --cache .aso-cache.json --cache-ttl 24h
+```
+
 Skip slow checks:
 
 ```bash
@@ -58,24 +87,25 @@ node bin/aso-scout.js --no-google-play --no-domains Bitescale
 The score is intentionally simple:
 
 - exact App Store match lowers the score strongly
-- close App Store matches lower the score
-- Google Play text hits lower the score
-- occupied domains lower the score
-- useful ASO tokens like `calorie`, `food`, `meal`, `macro`, `weight`, `bite`, `scale`, and `portion` raise the score
+- fuzzy App Store close matches lower the score
+- close matches in the same App Store category lower the score
+- Google Play title-like hits lower the score
+- registered or DNS-active domains lower the score
+- useful ASO tokens from the selected profile raise the score
 
 The result is a triage signal, not a final answer.
 
 ## Example
 
 ```text
-Name       Score Risk    App Store        Google Play      Domains
-Bitescale  78    medium  exact 0 close 0  hits 18          com free, app free, io free
-Portio     8     high    exact 2 close 3  hits 42          com occupied
+Name       Score  Risk    App Store                    Google Play  Domains
+Bitescale  78     low     exact 0, close 0, category 0  titles 0     .com registered, .app available-ish
+Portio     0      high    exact 2, close 3, category 2  titles 3     .com registered, .app registered
 ```
 
 ## Notes
 
 - App Store data comes from `https://itunes.apple.com/search`.
 - Google Play does not provide a public ASO search API; this tool uses a lightweight web search page check.
-- Domain checks use DNS resolution. A domain with no DNS record can still be registered, parked, or otherwise unavailable.
+- Domain checks use DNS plus RDAP. A domain result can still need manual registrar verification.
 - Always verify final names manually in stores, domains, social handles, and trademark databases.

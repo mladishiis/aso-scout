@@ -1,6 +1,6 @@
 {
   "name": "aso-scout",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "CLI for early ASO name research across App Store, Google Play, and domains.",
   "type": "module",
   "bin": {
@@ -8,7 +8,8 @@
   },
   "scripts": {
     "check": "node --check bin/aso-scout.js",
-    "sample": "node bin/aso-scout.js --names examples/names.txt --country us"
+    "sample": "node bin/aso-scout.js --names examples/names.txt --country us",
+    "sample:offline": "node bin/aso-scout.js --names examples/names.txt --no-app-store --no-google-play --no-domains"
   },
   "keywords": [
     "aso",
