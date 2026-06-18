@@ -1,0 +1,34 @@
+{
+  "name": "aso-scout",
+  "version": "0.1.0",
+  "description": "CLI for early ASO name research across App Store, Google Play, and domains.",
+  "type": "module",
+  "bin": {
+    "aso-scout": "./bin/aso-scout.js"
+  },
+  "scripts": {
+    "check": "node --check bin/aso-scout.js",
+    "sample": "node bin/aso-scout.js --names examples/names.txt --country us"
+  },
+  "keywords": [
+    "aso",
+    "app-store",
+    "google-play",
+    "app-name",
+    "keywords",
+    "cli"
+  ],
+  "author": "Sakov",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mladishiis/aso-scout.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mladishiis/aso-scout/issues"
+  },
+  "homepage": "https://github.com/mladishiis/aso-scout#readme"
+}
